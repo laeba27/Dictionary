@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import './App.css';
 import {MagnifyingGlass} from 'react-loader-spinner'
 import nodata from './assets/nodata.svg'
@@ -6,32 +6,75 @@ function App() {
   const [word, setWord] = useState('');
   const [getData, setGetData] = useState({});
   const [isloading, setisloading] = useState(false)
-  const apikey = "9NuIknuOpKM1VZ3YYPjy4g==b4HS03zsP6HODLPA";
-
-  
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchHistory, setSearchHistory] = useState([]);
+ 
   const handleSearch = async () => {
-    setisloading(true)
+    // Set loading state to true (indicating that a request is in progress)
+    setisloading(true);
+    setShowDropdown(false);
     try {
-      setisloading(true)
+      // Attempt to fetch data from the dictionary API
       const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+      
+      // Parse the response data as JSON
       const data = await response.json();
+  
+      // Update state with the fetched data (assuming the API returns an array, and we want the first item)
       setGetData(data[0]);
-      console.log(data[0])
+      
+
+       // Update search history
+       setSearchHistory((prevHistory) => {
+        const newHistory = [word, ...prevHistory.slice(0, 2)]; // Keep the last 3 searches
+        localStorage.setItem('searchHistory', JSON.stringify(newHistory)); // Save to localStorage
+        return newHistory;
+      });
+      setShowDropdown(false)
+      // Log the first item in the data array to the console
+      console.log(data[0]);
+
+       
     } catch (error) {
-      setisloading(false)
+      // If an error occurs during the fetch, set loading state to false and log the error
+      setisloading(false);
       console.error('Error fetching data:', error);
-    }setisloading(false)
-  };
+    }
   
-  
+    // Set loading state to false (whether the fetch was successful or not)
+    setisloading(false);
+  };  
+  useEffect(() => {
+    // Load search history from localStorage on component mount
+    const storedHistory = localStorage.getItem('searchHistory');
+    if (storedHistory) {
+      setSearchHistory(JSON.parse(storedHistory));
+    }
+  }, []);
+
     const playAudio = (audioUrl) => {
     const audio = new Audio(audioUrl);
     audio.play();
   };
 
+  const handleDropdownItemClick = (item) => {
+    // Handle the selected item from the dropdown
+    console.log('Selected:', item);
+    // Optionally, you can set the selected item to the input field or perform other actions
+    setWord(item);
+    // Close the dropdown
+    setShowDropdown(false);
+  };
+
+
+
 
   return (
     <div className='px-28 pt-10'>
+      
+      {/* TITLE */}
+       <h1 className='flex justify-center pb-10 text-3xl font-semibold '>DICTIONARY</h1>  
+
       {/* INPUT */}
       <div className="relative">
         <label htmlFor="Search" className="sr-only"> Search </label>
@@ -39,12 +82,32 @@ function App() {
           onChange={(e) => {
             setWord(e.target.value);
           }}
+          onClick={() => setShowDropdown(true)}
           value={word}
           type="text"
           id="Search"
+          autoComplete="off"
           placeholder="Search for..."
           className="w-full h-16 px-5 rounded-md border border-gray-700 py-2.5 pe-10 shadow-sm sm:text-lg"
         />
+
+         {/* Dropdown Menu */}
+        {showDropdown && (
+          <div className="absolute  border border-stone-900 h-30 w-full top-full left-0 mt-1 bg-white rounded-md shadow-lg">
+            {/* Replace the following with your actual dropdown items */}
+            {searchHistory.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => handleDropdownItemClick(item)}
+                className=" w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-200 focus:outline-none focus:bg-gray-200"
+              >
+                {item}
+              </button>
+            ))}
+            {/* Add more items as needed */}
+          </div>
+        )}
+        
         <span className="absolute inset-y-0 end-0 grid w-10 place-content-center">
           <button onClick={handleSearch} type="button" className="text-gray-600 hover:text-gray-700">
             <span className="sr-only">Search</span>
@@ -66,9 +129,11 @@ function App() {
         </span>
       </div>
 
+      
+      
       {/* WORD CARD */}
-      {getData?.word ? (
-        <div className="mt-8 p-6 bg-white rounded-md shadow-md relative">
+      {!isloading && getData?.word ? (
+        <div className="mt-8 p-6 border border-sky-900 bg-white rounded-md shadow-md relative">
         
         <div className='absolute right-8 top-10'> {getData.phonetics[0].audio && (
                 <button
@@ -94,20 +159,26 @@ function App() {
           ))}
         </div>
       )  : 
-      <div>
-        {getData===undefined ? <img src={nodata} alt="" /> : null}
+      (
+  <div>
+    {getData === undefined && !isloading ? (
+      <div className='flex flex-col items-center justify-center pt-16'>
+        <h1 className='text-lg text-red-500'>OOPS!! NO DATA FOUND </h1>
+        <img className='h-40 w-40' src={nodata} alt="" />
       </div>
-       }
-       {isloading && <MagnifyingGlass
+    ) : null}
+  </div>
+)}
+       {isloading && <div className='flex justify-center items-center h-full w-full left-0 absolute top-0 z-50 bg-slate-950/40 '><MagnifyingGlass 
   visible={true}
-  height="80"
-  width="80"
+  height="120"
+  width="120"
   ariaLabel="magnifying-glass-loading"
   wrapperStyle={{}}
   wrapperClass="magnifying-glass-wrapper"
   glassColor="#c0efff"
   color="#e15b64"
-  /> }
+  /></div>  }
     </div>
   );
 }
