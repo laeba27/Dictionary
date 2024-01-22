@@ -93,7 +93,7 @@ function App() {
 
          {/* Dropdown Menu */}
         {showDropdown && (
-          <div className="absolute  border border-stone-900 h-30 w-full top-full left-0 mt-1 bg-white rounded-md shadow-lg">
+          <div className="absolute z-30 border border-stone-900 h-30 w-full top-full left-0 mt-1 bg-white rounded-md shadow-lg">
             {/* Replace the following with your actual dropdown items */}
             {searchHistory.map((item, index) => (
               <button
