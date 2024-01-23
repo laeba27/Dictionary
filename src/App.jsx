@@ -23,10 +23,9 @@ function App() {
       // Update state with the fetched data (assuming the API returns an array, and we want the first item)
       setGetData(data[0]);
       
-
        // Update search history
        setSearchHistory((prevHistory) => {
-        const newHistory = [word, ...prevHistory.slice(0, 2)]; // Keep the last 3 searches
+        const newHistory = [word, ...prevHistory.slice(0, 4)]; // Keep the last 3 searches
         localStorage.setItem('searchHistory', JSON.stringify(newHistory)); // Save to localStorage
         return newHistory;
       });
@@ -50,7 +49,10 @@ function App() {
     if (storedHistory) {
       setSearchHistory(JSON.parse(storedHistory));
     }
-  }, []);
+    if (word.length==0) {
+      setShowDropdown(false)
+    }
+  }, [word]);
 
     const playAudio = (audioUrl) => {
     const audio = new Audio(audioUrl);
@@ -70,7 +72,7 @@ function App() {
 
 
   return (
-    <div className='px-28 pt-10'>
+    <div className='lg:max-w-screen-xl md:max-w-screen-lg sm:max-w-screen-md mx-auto pt-10' >
       
       {/* TITLE */}
        <h1 className='flex justify-center pb-10 text-3xl font-semibold '>DICTIONARY</h1>  
@@ -79,9 +81,11 @@ function App() {
       <div className="relative">
         <label htmlFor="Search" className="sr-only"> Search </label>
         <input
+        
           onChange={(e) => {
             setWord(e.target.value);
           }}
+          onBlur={()=>setShowDropdown(false)}
           onClick={() => setShowDropdown(true)}
           value={word}
           type="text"
@@ -93,7 +97,7 @@ function App() {
 
          {/* Dropdown Menu */}
         {showDropdown && (
-          <div className="absolute z-30 border border-stone-900 h-30 w-full top-full left-0 mt-1 bg-white rounded-md shadow-lg">
+          <div  className="absolute z-30 border border-stone-900 h-20 overflow-y-scroll w-full top-full left-0 mt-1 bg-white rounded-md shadow-lg">
             {/* Replace the following with your actual dropdown items */}
             {searchHistory.map((item, index) => (
               <button
@@ -129,8 +133,6 @@ function App() {
         </span>
       </div>
 
-      
-      
       {/* WORD CARD */}
       {!isloading && getData?.word ? (
         <div className="mt-8 p-6 border border-sky-900 bg-white rounded-md shadow-md relative">
@@ -144,7 +146,7 @@ function App() {
               )}
         </div>
 
-          <h2 className="text-xl font-semibold mb-2">{word}</h2>
+          <h2 className="text-xl font-semibold mb-2">{getData?.word}</h2>
           
           {getData.meanings.map((meaning, index) => (
             <div key={index} className="mb-4">
